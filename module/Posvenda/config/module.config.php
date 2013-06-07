@@ -10,21 +10,21 @@
 return array(
     'router' => array(
         'routes' => array(
-			'restful' => array(
-				'type'    => 'Zend\Mvc\Router\Http\Segment',
-				'options' => array(
-					'route'       => '/:controller[/:id]',
-					'constraints' => array(
-						'controller' => '[a-zA-Z][a-zA-Z0-9_-]*',
-						'id'         => '[a-zA-Z0-9_-]*'
-					),
-				),
-			),
+                    'restful' => array(
+                            'type'    => 'Zend\Mvc\Router\Http\Segment',
+                            'options' => array(
+                                    'route'       => '/:controller[/:id]',
+                                    'constraints' => array(
+                                            'controller' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                                            'id'         => '[a-zA-Z0-9_-]*'
+                                    ),
+                            ),
+                    ),
 		),
     ),
     'controllers' => array(
         'invokables' => array(
-            'menu' => 'Posvenda\Controller\MenuController',
+            'linha' => 'Posvenda\Controller\LinhaController',
         ),
     ),
 

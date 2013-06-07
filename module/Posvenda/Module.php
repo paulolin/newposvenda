@@ -67,7 +67,7 @@ class Module
     {
         $config = $this->getAppConfig();
 
-        $adapter = new \Zend\Db\Adapter\Adapter($config['db']);;
+        $adapter = new \Zend\Db\Adapter\Adapter($config['db']);
         $model = new $modelName($adapter);
 
         return $model;
