@@ -12,6 +12,7 @@ abstract class AbstractTable
     protected $_table;
     protected $_adapter;
     protected $_columns = null;
+    protected $primaryColumn;
     protected $_joins = array();
 
     public function __construct(Adapter $adapter, $tableConfig) {
@@ -60,100 +61,85 @@ abstract class AbstractTable
             $select->where($where);
         }
 
-        print_r($this->_sql->getSqlStringForSqlObject($select)); exit;
+        $statement = $this->_sql->prepareStatementForSqlObject($select);
+        $result = $statement->execute();
 
-//        $statement = $this->sql->prepareStatementForSqlObject($select);
-//
-//        $result = $statement->execute();
-//
-//        $selectCount = $this->sql->select();
-//        $selectCount->columns(array('total' => new \Zend\Db\Sql\Expression("count(*)")));
-//        $selectCount->where($where);
-//        $statementCount = $this->sql->prepareStatementForSqlObject($selectCount);
-//        $resultCount = $statementCount->execute();
-//
-//        $resultSetCount = new ResultSet();
-//        $resultSetCount->initialize($resultCount);
-//
-//        $resultSet = new ResultSet();
-//        $resultSet->initialize($result);
-//
-//        $returnArray['array'] = $resultSet->toArray();
-//        $returnArray['count'] = $resultSetCount->count();
-//
-//        return $returnArray;
+        $selectCount = $this->_sql->select();
+        $selectCount->columns(array('total' => new \Zend\Db\Sql\Expression("count(*)")));
+        $selectCount->where($where);
+        $statementCount = $this->_sql->prepareStatementForSqlObject($selectCount);
+        $resultCount = $statementCount->execute();
+
+        $resultSetCount = new ResultSet();
+        $resultSetCount->initialize($resultCount);
+
+        $resultSet = new ResultSet();
+        $resultSet->initialize($result);
+
+        $returnArray['array'] = $resultSet->toArray();
+        $returnArray['count'] = $resultSetCount->count();
+        
+        return $returnArray;
 
     }
 
-//    public function save(Array $values) {
-//
-//        if ($values) {
-//
-//            $arr = array('token', 'qtde', 'referencia');
-//
-//            foreach ($arr as $val) {
-//                if (!array_key_exists($val, $values)) {
-//                    return array(
-//                            'status' => 406,
-//                            'response' => array(
-//                                'status' => 'Not Acceptable',
-//                                'message' => 'Informações insuficientes'
-//                            )
-//                        );
-//                }
-//            }
-//
-//            $tokenExists = $this->getByToken($values['token'], true);
-//
-//            if (empty($tokenExists)) {
-//                return array(
-//                        'status' => 403,
-//                        'response' => array(
-//                            'status' => 'Forbidden',
-//                            'message' => 'Token inválida'
-//                        )
-//                    );
-//            }
-//
-//            $sql = new Sql($this->getAdapter());
-//            $select = $sql->select();
-//            $select->from('tbl_peca')
-//                ->where(array(
-//                    'fabrica' => self::FABRICA,
-//                    'referencia' => $values['referencia']
-//                    )
-//                );
-//            $statement = $sql->prepareStatementForSqlObject($select);
-//            $results = $statement->execute();
-//
-//            $resultSet = new ResultSet();
-//            $resultSet->initialize($results);
-//            $result = $resultSet->toArray();
-//
-//            if (!$result) {
-//                return array(
-//                        'status' => 406,
-//                        'response' => array(
-//                            'status' => 'Not Acceptable',
-//                            'message' => 'Referência não encontrada'
-//                        )
-//                    );
-//            }
-//
-//            $values['fabrica'] = self::FABRICA;
-//
-//            $insert = $this->_sql->insert();
-//            $insert->values($values);
-//
-//            $statement = $this->_sql->prepareStatementForSqlObject($insert);
-//            $statement->execute();
-//
-//            return TRUE;
-//        } else {
-//            return FALSE;
-//        }
-//
-//    }
+
+        public function save($data) {
+
+        $insert = $this->_sql->insert();
+
+        $insert->values($data);
+        $statement = $this->_sql->prepareStatementForSqlObject($insert);
+        $result = $statement->execute();
+
+        $id = $this->_adapter->getDriver()->getConnection()->getLastGeneratedValue();
+        
+        
+        return array('status'=>200, $this->primaryColumn=>$id,);
+    }
+
+    
+    public function update($id, $data) {
+        $update = $this->_sql->update();
+        $update->set($data)
+                ->where(
+                        array(
+                            $this->primaryColumn => $id
+                       ));
+
+        $statement = $this->_sql->prepareStatementForSqlObject($update);
+        $result = $statement->execute();
+        
+        return array('status'=>200, $this->primaryColumn=>$id,);
+    }
+
+    
+    public function delete($id) {
+
+        $delete = $this->_sql->delete();
+        $delete->where(array($this->primaryColumn => $id));
+        $statement = $this->_sql->prepareStatementForSqlObject($delete);
+        $result = $statement->execute();
+
+        return $result;
+    }
+    
+    public function genericSQL($table, array $columns, array $params) {
+        $sql = new Sql($this->adapter);
+        
+        $select = $sql->select();
+        $select->from($table)
+                ->columns($columns)
+                ->where($params);
+        
+        $statement = $sql->prepareStatementForSqlObject($select);
+        $result = $statement->execute();
+
+        $resultSet = new ResultSet();
+        $resultSet->initialize($result);
+
+        return $resultSet->toArray();
+    }
 
 
     public function getAdapter()
